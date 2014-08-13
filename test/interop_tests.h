@@ -166,3 +166,20 @@ bool test_reference_return(sel::State &state) {
     Special &ref = state["return_special_reference"]();
     return &ref == &special;
 }
+
+bool test_runtime_error(sel::State &state) {
+    state.Load("../test/test.lua");
+    bool check1 = false, check2 = false;
+    try {
+        int x = state["add"]();
+    } catch(sel::LuaError e) {
+        check1 = true;
+    }
+    try {
+        sel::function<int()> add = state["add"];
+        int x = add();
+    } catch(sel::LuaError e) {
+        check2 = true;
+    }
+    return check1 && check2;
+}

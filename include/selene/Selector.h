@@ -3,6 +3,7 @@
 #include "exotics.h"
 #include <functional>
 #include "Registry.h"
+#include "LuaError.h"
 #include <string>
 #include <tuple>
 #include <vector>
@@ -77,7 +78,7 @@ public:
         _get{other._get},
         _put{other._put} {}
 
-    ~Selector() {
+    ~Selector() noexcept(false) {
         // If there is a functor present, execute it and collect no args
         if (_functor != nullptr) {
             _traverse();
@@ -96,7 +97,8 @@ public:
         constexpr int num_args = sizeof...(Args);
         auto tmp = new Functor([this, tuple_args, num_args](int num_ret) {
                 detail::_push(_state, tuple_args);
-                lua_call(_state, num_args, num_ret);
+                int err = lua_pcall(_state, num_args, num_ret, 0);
+                if (err != 0) throw LuaError(err, lua_tostring(_state, -1));
             });
         _functor.reset(std::move(tmp));
         return *this;
@@ -221,8 +223,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<T*>{}, _state);
         lua_settop(_state, 0);
@@ -234,8 +236,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<T*>{}, _state);
         lua_settop(_state, 0);
@@ -246,8 +248,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<bool>{}, _state);
         lua_settop(_state, 0);
@@ -258,8 +260,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<int>{}, _state);
         lua_settop(_state, 0);
@@ -270,8 +272,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<unsigned int>{}, _state);
         lua_settop(_state, 0);
@@ -282,8 +284,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<lua_Number>{}, _state);
         lua_settop(_state, 0);
@@ -294,8 +296,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret =  detail::_pop(detail::_id<std::string>{}, _state);
         lua_settop(_state, 0);
@@ -307,8 +309,8 @@ public:
         _traverse();
         _get();
         if (_functor != nullptr) {
-            (*_functor)(1);
-            _functor.reset();
+            std::unique_ptr<Functor> functor_copy(_functor.release());
+            (*functor_copy)(1);
         }
         auto ret = detail::_pop(detail::_id<sel::function<R(Args...)>>{},
                                 _state);

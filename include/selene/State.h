@@ -54,8 +54,9 @@ public:
         return lua_gettop(_l);
     }
 
-    bool Load(const std::string &file) {
-        return !luaL_dofile(_l, file.c_str());
+    void Load(const std::string &file) {
+        if (luaL_dofile(_l, file.c_str()) != 0)
+            throw LuaError(LUA_ERRRUN, lua_tostring(_l, -1));
     }
 
     void OpenLib(const std::string& modname, lua_CFunction openf) {
@@ -94,10 +95,10 @@ public:
         return Selector(_l, *_registry, name);
     }
 
-    bool operator()(const char *code) {
+    void operator()(const char *code) {
         bool result = !luaL_dostring(_l, code);
         if(result) lua_settop(_l, 0);
-        return result;
+        else throw LuaError(LUA_ERRRUN, lua_tostring(_l, -1));
     }
     void ForceGC() {
         lua_gc(_l, LUA_GCCOLLECT, 0);
